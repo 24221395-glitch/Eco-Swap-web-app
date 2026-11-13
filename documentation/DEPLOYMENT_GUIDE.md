@@ -68,3 +68,14 @@ Add `Strict-Transport-Security` at the proxy. The application already sends CSP,
 ## Monitoring
 
 Watch the application log for `ERROR` lines and `Concurrent update conflict` info lines (these are expected to be rare). Track the database size and the storage volume's free space.
+
+## Free public hosting: Render (app) + Aiven (MySQL)
+
+1. **Aiven** (https://aiven.io, free plan, no card): create a *MySQL* service on the **Free** plan. From its Overview page note Host, Port, User (`avnadmin`), Password and Database (`defaultdb`).
+2. **Render** (https://render.com, sign in with GitHub): **New → Blueprint** → choose this repository. `render.yaml` creates a free Docker web service and asks for:
+   - `DB_URL` = `jdbc:mysql://HOST:PORT/defaultdb?sslMode=REQUIRED&serverTimezone=UTC&characterEncoding=utf8`
+   - `DB_USERNAME` = `avnadmin`, `DB_PASSWORD` = the Aiven password
+   - `ECOSWAP_ADMIN_EMAIL` / `ECOSWAP_ADMIN_PASSWORD` = the first administrator (8+ characters, a letter and a digit)
+3. The first build takes about 5–8 minutes. The site is then live at `https://<name>.onrender.com`.
+
+Free-plan notes: the service sleeps after 15 minutes without visitors (the next visit takes about a minute to wake it), photos are stored in MySQL (`ECOSWAP_STORAGE_TYPE=database`) because the free disk is wiped on restart, and e-mail sending is off unless `SPRING_MAIL_*` is set (verification links are then only written to the log, so keep `ECOSWAP_REQUIRE_EMAIL_VERIFICATION=false`).

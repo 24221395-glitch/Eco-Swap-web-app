@@ -58,6 +58,7 @@ ecoswap:
   base-url: ${ECOSWAP_BASE_URL:http://localhost:8080}
   display-time-zone: ${ECOSWAP_TIME_ZONE:Asia/Kuala_Lumpur}
   storage:
+    type: ${ECOSWAP_STORAGE_TYPE:local}       # local | database (for hosts without a persistent disk)
     local-dir: ${ECOSWAP_STORAGE_DIR:./storage}
     max-image-bytes: 5242880          # 5 MB per photograph
     max-images-per-item: 6

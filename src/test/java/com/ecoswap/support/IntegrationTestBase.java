@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 public abstract class IntegrationTestBase {
 
     private static final List<String> TABLES = List.of("admin_audit_logs", "approval_history", "support_replies", "support_tickets",
-            "reports", "notifications", "favorites", "chat_messages", "exchange_requests", "item_images", "items",
+            "reports", "notifications", "favorites", "chat_messages", "stored_files", "exchange_requests", "item_images", "items",
             "email_verification_tokens", "password_reset_tokens", "users");
 
     @Autowired protected MockMvc mvc;
