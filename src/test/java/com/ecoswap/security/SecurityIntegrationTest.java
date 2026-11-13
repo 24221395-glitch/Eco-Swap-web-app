@@ -28,7 +28,7 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void studentsCannotUseAdminEndpoints() throws Exception {
-        User student = student("Ben Tan", AccountStatus.ACTIVE);
+        User student = student("Mou", AccountStatus.ACTIVE);
         mvc.perform(get("/api/admin/users").with(as(student))).andExpect(status().isForbidden());
         mvc.perform(patch("/api/admin/users/{id}/approve", student.getId()).with(as(student)).with(csrf())).andExpect(status().isForbidden());
         mvc.perform(get("/admin").with(as(student))).andExpect(status().isForbidden());
@@ -36,8 +36,8 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void stateChangingRequestsRequireCsrfToken() throws Exception {
-        User student = student("Ben Tan", AccountStatus.ACTIVE);
-        Item item = approvedItem(student("Aisha Karim", AccountStatus.ACTIVE), ListingType.GIVEAWAY, admin());
+        User student = student("Mou", AccountStatus.ACTIVE);
+        Item item = approvedItem(student("Adib", AccountStatus.ACTIVE), ListingType.GIVEAWAY, admin());
         mvc.perform(post("/api/favorites/{id}", item.getId()).with(as(student))).andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("CSRF_INVALID"));
         mvc.perform(post("/api/favorites/{id}", item.getId()).with(as(student)).with(csrf())).andExpect(status().isOk());
@@ -45,8 +45,8 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void studentsCannotModifyOtherStudentsListings() throws Exception {
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User other = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User other = student("Mou", AccountStatus.ACTIVE);
         Item item = approvedItem(owner, ListingType.SWAP, admin());
         mvc.perform(multipart("/api/items/{id}", item.getId()).with(r -> { r.setMethod("PUT"); return r; }).with(as(other)).with(csrf())
                         .param("name", "Hijacked listing").param("categoryId", item.getCategory().getId().toString())
@@ -58,7 +58,7 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void invalidUploadsAreRejected() throws Exception {
-        User student = student("Ben Tan", AccountStatus.ACTIVE);
+        User student = student("Mou", AccountStatus.ACTIVE);
         var fake = new MockMultipartFile("photos", "photo.jpg", "image/jpeg", "<script>alert(1)</script>".getBytes());
         mvc.perform(multipart("/api/items").file(fake).with(as(student)).with(csrf())
                         .param("name", "Desk lamp").param("categoryId", categories.findBySlug("household").orElseThrow().getId().toString())
@@ -69,7 +69,7 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void pendingListingsAreHiddenFromOthers() throws Exception {
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
         Item item = approvedItem(owner, ListingType.SWAP, admin());
         jdbc.update("update items set approval_status = 'PENDING_APPROVAL' where item_id = ?", item.getId());
         mvc.perform(get("/api/items/{id}", item.getId())).andExpect(status().isNotFound());
@@ -79,8 +79,8 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void unknownLoginAndWrongPasswordGiveTheSameAnswer() throws Exception {
-        student("Ben Tan", AccountStatus.ACTIVE);
-        for (String email : new String[]{"ben.tan@siswa.um.edu.my", "nobody@siswa.um.edu.my"}) {
+        student("Mou", AccountStatus.ACTIVE);
+        for (String email : new String[]{"mou@siswa.um.edu.my", "nobody@siswa.um.edu.my"}) {
             mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                     .content(body(Map.of("email", email, "password", "WrongPass1", "rememberMe", false))))
                     .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));

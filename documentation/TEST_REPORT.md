@@ -53,7 +53,7 @@ Client-side validation messages. Registration form → pending page. Pending log
 
 ## v1.1 browser end-to-end (Chrome, real UI) ✅ 20 / 20
 
-Map picker on the item form (click to pin) → admin approval → pickup map lists the item and, after "locate", shows `≈ 3 min walk · 190 m` → item page shows distance and walk time → request → chat refused while pending → owner accepts → "Chat with Ben" from Received Requests → message sent with Enter → requester's header badge shows 1 → requester opens the thread → reply appears for the owner within 3 s without reloading → "Seen" receipt → owner confirms the handover in the chat → requester sees "Farah confirmed, confirm too" live → requester confirms → "Exchange completed!" → `/api/impact/summary` goes from 4 → 5 completed exchanges, 5 → 6 items reused and 5.5 → 6.9 kg → chat stays writable after completion.
+Map picker on the item form (click to pin) → admin approval → pickup map lists the item and, after "locate", shows `≈ 3 min walk · 190 m` → item page shows distance and walk time → request → chat refused while pending → owner accepts → "Chat with Mou" from Received Requests → message sent with Enter → requester's header badge shows 1 → requester opens the thread → reply appears for the owner within 3 s without reloading → "Seen" receipt → owner confirms the handover in the chat → requester sees "Adib confirmed, confirm too" live → requester confirms → "Exchange completed!" → `/api/impact/summary` goes from 4 → 5 completed exchanges, 5 → 6 items reused and 5.5 → 6.9 kg → chat stays writable after completion.
 
 Responsive check: every public, student and admin page at 375 px, 768 px and 1280 px has no horizontal overflow and no JavaScript errors.
 

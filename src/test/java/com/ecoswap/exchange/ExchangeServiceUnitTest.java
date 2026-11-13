@@ -55,8 +55,8 @@ class ExchangeServiceUnitTest {
     @BeforeEach
     void setUp() {
         service = new ExchangeService(requests, items, users, notifications, mapper, em);
-        owner = withId(User.newStudent("Aisha Karim", "a@test", "h", "UM"), 1L);
-        requester = withId(User.newStudent("Ben Tan", "b@test", "h", "UM"), 2L);
+        owner = withId(User.newStudent("Adib", "a@test", "h", "UM"), 1L);
+        requester = withId(User.newStudent("Mou", "b@test", "h", "UM"), 2L);
         owner.changeStatus(AccountStatus.ACTIVE, null);
         requester.changeStatus(AccountStatus.ACTIVE, null);
         Category cat = new Category("Books", "books", null, "books", 1);

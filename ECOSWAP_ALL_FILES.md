@@ -11345,7 +11345,7 @@ FILE: src/main/resources/templates/pages/item-details.html
                     <th:block th:unless="${item.owner.avatarUrl != null and currentUser != null}" th:text="${item.owner.initials}">AK</th:block>
                 </span>
                 <div>
-                    <strong th:text="${item.viewer.owner} ? 'You' : ${item.owner.firstName}">Aisha</strong>
+                    <strong th:text="${item.viewer.owner} ? 'You' : ${item.owner.firstName}">Adib</strong>
                     <span th:text="${item.owner.university}">Universiti Malaya</span>
                 </div>
             </div>
@@ -18344,7 +18344,7 @@ import org.springframework.http.MediaType;
 class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
 
     private Map<String, Object> registration(String email) {
-        return Map.of("fullName", "Aisha Karim", "email", email, "password", PASSWORD, "confirmPassword", PASSWORD,
+        return Map.of("fullName", "Adib", "email", email, "password", PASSWORD, "confirmPassword", PASSWORD,
                 "university", "Universiti Malaya", "acceptTerms", true);
     }
 
@@ -18356,10 +18356,10 @@ class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
     @Test
     void registrationCreatesPendingStudentAndNotifiesAdmins() throws Exception {
         User admin = admin();
-        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body(registration("Aisha@Siswa.um.edu.my"))))
+        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body(registration("Adib@Siswa.um.edu.my"))))
                 .andExpect(status().isCreated());
 
-        User saved = users.findByEmail("aisha@siswa.um.edu.my").orElseThrow();   // e-mail normalised
+        User saved = users.findByEmail("adib@siswa.um.edu.my").orElseThrow();   // e-mail normalised
         assertThat(saved.getRole()).isEqualTo(UserRole.USER);
         assertThat(saved.getAccountStatus()).isEqualTo(AccountStatus.PENDING_APPROVAL);
         assertThat(saved.getPasswordHash()).startsWith("$2").isNotEqualTo(PASSWORD);
@@ -18369,8 +18369,8 @@ class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
 
     @Test
     void duplicateEmailAndWeakPasswordAreRejected() throws Exception {
-        student("Aisha Karim", AccountStatus.ACTIVE);
-        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body(registration("aisha.karim@siswa.um.edu.my"))))
+        student("Adib", AccountStatus.ACTIVE);
+        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body(registration("adib@siswa.um.edu.my"))))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("EMAIL_TAKEN"));
         var weak = new java.util.HashMap<>(registration("new@siswa.um.edu.my"));
         weak.put("password", "short");
@@ -18394,7 +18394,7 @@ class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
     @Test
     void approvalLifecycleControlsLogin() throws Exception {
         User admin = admin();
-        User student = student("Ben Tan", AccountStatus.PENDING_APPROVAL);
+        User student = student("Mou", AccountStatus.PENDING_APPROVAL);
 
         login(student.getEmail(), PASSWORD).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("ACCOUNT_PENDING"));
         login(student.getEmail(), "wrong-pass1").andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
@@ -18419,7 +18419,7 @@ class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
     @Test
     void rejectedStudentSeesReasonAndCannotUseApp() throws Exception {
         User admin = admin();
-        User student = student("Chen Wei", AccountStatus.PENDING_APPROVAL);
+        User student = student("Student C", AccountStatus.PENDING_APPROVAL);
         mvc.perform(patch("/api/admin/users/{id}/reject", student.getId()).with(as(admin)).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(body(Map.of("reason", "Not a university e-mail")))).andExpect(status().isOk());
         login(student.getEmail(), PASSWORD).andExpect(status().isForbidden())
@@ -18527,9 +18527,9 @@ class ChatMapAndImpactIntegrationTest extends IntegrationTestBase {
     @Test
     void chatOpensOnAcceptanceAndOnlyParticipantsCanUseIt() throws Exception {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
-        User stranger = student("Chen Wei", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
+        User stranger = student("Student C", AccountStatus.ACTIVE);
         Item item = approvedItem(owner, ListingType.GIVEAWAY, admin);
         ExchangeRequestView r = exchanges.create(requester.getId(), item.getId(), null, "May I have it?");
 
@@ -18546,7 +18546,7 @@ class ChatMapAndImpactIntegrationTest extends IntegrationTestBase {
         assertThat(chats.unreadCount(owner.getId())).isEqualTo(2);
         assertThat(notificationService.counts(owner.getId()).unreadMessages()).isEqualTo(2);
         assertThat(chats.conversations(owner.getId())).singleElement()
-                .satisfies(c -> { assertThat(c.unread()).isEqualTo(2); assertThat(c.canSend()).isTrue(); assertThat(c.other().fullName()).isEqualTo("Ben Tan"); });
+                .satisfies(c -> { assertThat(c.unread()).isEqualTo(2); assertThat(c.canSend()).isTrue(); assertThat(c.other().fullName()).isEqualTo("Mou"); });
 
         // opening the thread marks it read; polling with "after" only returns newer messages
         ChatViews.Thread thread = chats.thread(owner.getId(), r.id(), null);
@@ -18583,8 +18583,8 @@ class ChatMapAndImpactIntegrationTest extends IntegrationTestBase {
     @Test
     void completedExchangeUpdatesImpactFiguresImmediately() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
         Item wanted = approvedItem(owner, ListingType.SWAP, admin);     // 1.50 kg
         Item offered = approvedItem(requester, ListingType.GIVEAWAY, admin);
         ImpactSummary before = impact.summary();
@@ -18606,7 +18606,7 @@ class ChatMapAndImpactIntegrationTest extends IntegrationTestBase {
     @Test
     void pickupPinIsStoredValidatedAndPublishedOnTheMap() throws Exception {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
         Item pinned = approvedItem(owner, ListingType.GIVEAWAY, admin);
         pinned.setPickupPin(new BigDecimal("3.1209"), new BigDecimal("101.6538"));
         items.save(pinned);
@@ -18697,8 +18697,8 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void fullSwapLifecycleCompletesOnlyAfterBothConfirm() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
         Item wanted = approvedItem(owner, ListingType.SWAP, admin);
         Item offered = approvedItem(requester, ListingType.GIVEAWAY, admin);
 
@@ -18719,11 +18719,11 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void businessRulesAreEnforcedOnTheServer() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
         Item swap = approvedItem(owner, ListingType.SWAP, admin);
         Item giveaway = approvedItem(owner, ListingType.GIVEAWAY, admin);
-        Item othersItem = approvedItem(student("Chen Wei", AccountStatus.ACTIVE), ListingType.SWAP, admin);
+        Item othersItem = approvedItem(student("Student C", AccountStatus.ACTIVE), ListingType.SWAP, admin);
 
         assertCode(() -> exchanges.create(owner.getId(), swap.getId(), null, null), "OWN_ITEM");
         assertCode(() -> exchanges.create(requester.getId(), swap.getId(), null, null), "VALIDATION_FAILED");              // swap needs offer
@@ -18743,8 +18743,8 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void databaseRejectsDuplicateActiveRequestsEvenIfServiceIsBypassed() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
         Item item = approvedItem(owner, ListingType.GIVEAWAY, admin);
         requests.saveAndFlush(new com.ecoswap.exchange.entity.ExchangeRequest(item, requester, null, null));
         assertThatThrownBy(() -> requests.saveAndFlush(new com.ecoswap.exchange.entity.ExchangeRequest(item, requester, null, null)))
@@ -18754,18 +18754,18 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void acceptingClosesConflictingRequestsAndWithdrawReleasesItems() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User ben = student("Ben Tan", AccountStatus.ACTIVE);
-        User chen = student("Chen Wei", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User mou = student("Mou", AccountStatus.ACTIVE);
+        User chen = student("Student C", AccountStatus.ACTIVE);
         Item lamp = approvedItem(owner, ListingType.GIVEAWAY, admin);
-        var fromBen = exchanges.create(ben.getId(), lamp.getId(), null, null);
+        var fromMou = exchanges.create(mou.getId(), lamp.getId(), null, null);
         var fromChen = exchanges.create(chen.getId(), lamp.getId(), null, null);
 
-        exchanges.accept(owner.getId(), fromBen.id());
+        exchanges.accept(owner.getId(), fromMou.id());
         assertThat(requests.findById(fromChen.id()).orElseThrow().getStatus()).isEqualTo(ExchangeRequestStatus.CLOSED);
 
-        assertCode(() -> exchanges.cancel(ben.getId(), fromBen.id(), null), "VALIDATION_FAILED");   // withdraw needs reason
-        exchanges.cancel(ben.getId(), fromBen.id(), "Found one elsewhere");
+        assertCode(() -> exchanges.cancel(mou.getId(), fromMou.id(), null), "VALIDATION_FAILED");   // withdraw needs reason
+        exchanges.cancel(mou.getId(), fromMou.id(), "Found one elsewhere");
         assertThat(items.findById(lamp.getId()).orElseThrow().getAvailabilityStatus()).isEqualTo(ItemAvailabilityStatus.AVAILABLE);
     }
 
@@ -18773,10 +18773,10 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void concurrentAcceptancesCannotReserveTheSameItemTwice() throws Exception {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
         Item lamp = approvedItem(owner, ListingType.GIVEAWAY, admin);
         List<Long> requestIds = new ArrayList<>();
-        for (String name : List.of("Ben Tan", "Chen Wei", "Dina Lee", "Eva Ong")) {
+        for (String name : List.of("Mou", "Student C", "Student D", "Student E")) {
             requestIds.add(exchanges.create(student(name, AccountStatus.ACTIVE).getId(), lamp.getId(), null, null).id());
         }
         assertThat(race(requestIds.stream().<Callable<Object>>map(id -> () -> exchanges.accept(owner.getId(), id)).toList())).isEqualTo(1);
@@ -18788,9 +18788,9 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void anOfferedItemCannotBeReservedByTwoSwapsAtOnce() throws Exception {
         User admin = admin();
-        User trader = student("Ben Tan", AccountStatus.ACTIVE);
-        User ownerA = student("Aisha Karim", AccountStatus.ACTIVE);
-        User ownerC = student("Chen Wei", AccountStatus.ACTIVE);
+        User trader = student("Mou", AccountStatus.ACTIVE);
+        User ownerA = student("Adib", AccountStatus.ACTIVE);
+        User ownerC = student("Student C", AccountStatus.ACTIVE);
         Item offered = approvedItem(trader, ListingType.SWAP, admin);
         Item a = approvedItem(ownerA, ListingType.SWAP, admin);
         Item c = approvedItem(ownerC, ListingType.SWAP, admin);
@@ -18893,8 +18893,8 @@ class ExchangeServiceUnitTest {
     @BeforeEach
     void setUp() {
         service = new ExchangeService(requests, items, users, notifications, mapper, em);
-        owner = withId(User.newStudent("Aisha Karim", "a@test", "h", "UM"), 1L);
-        requester = withId(User.newStudent("Ben Tan", "b@test", "h", "UM"), 2L);
+        owner = withId(User.newStudent("Adib", "a@test", "h", "UM"), 1L);
+        requester = withId(User.newStudent("Mou", "b@test", "h", "UM"), 2L);
         owner.changeStatus(AccountStatus.ACTIVE, null);
         requester.changeStatus(AccountStatus.ACTIVE, null);
         Category cat = new Category("Books", "books", null, "books", 1);
@@ -18972,7 +18972,7 @@ class ItemModerationRulesTest {
         ReflectionTestUtils.setField(books, "id", 1L);
         ReflectionTestUtils.setField(furniture, "id", 2L);
         admin = User.newAdministrator("Admin", "admin@test", "hash");
-        item = new Item(User.newStudent("Aisha", "a@test", "hash", "UM"), books, "Textbook", "Good condition textbook",
+        item = new Item(User.newStudent("Adib", "a@test", "hash", "UM"), books, "Textbook", "Good condition textbook",
                 ItemCondition.GOOD, ListingType.SWAP, "Library", null);
     }
 
@@ -19055,7 +19055,7 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void studentsCannotUseAdminEndpoints() throws Exception {
-        User student = student("Ben Tan", AccountStatus.ACTIVE);
+        User student = student("Mou", AccountStatus.ACTIVE);
         mvc.perform(get("/api/admin/users").with(as(student))).andExpect(status().isForbidden());
         mvc.perform(patch("/api/admin/users/{id}/approve", student.getId()).with(as(student)).with(csrf())).andExpect(status().isForbidden());
         mvc.perform(get("/admin").with(as(student))).andExpect(status().isForbidden());
@@ -19063,8 +19063,8 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void stateChangingRequestsRequireCsrfToken() throws Exception {
-        User student = student("Ben Tan", AccountStatus.ACTIVE);
-        Item item = approvedItem(student("Aisha Karim", AccountStatus.ACTIVE), ListingType.GIVEAWAY, admin());
+        User student = student("Mou", AccountStatus.ACTIVE);
+        Item item = approvedItem(student("Adib", AccountStatus.ACTIVE), ListingType.GIVEAWAY, admin());
         mvc.perform(post("/api/favorites/{id}", item.getId()).with(as(student))).andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("CSRF_INVALID"));
         mvc.perform(post("/api/favorites/{id}", item.getId()).with(as(student)).with(csrf())).andExpect(status().isOk());
@@ -19072,8 +19072,8 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void studentsCannotModifyOtherStudentsListings() throws Exception {
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User other = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User other = student("Mou", AccountStatus.ACTIVE);
         Item item = approvedItem(owner, ListingType.SWAP, admin());
         mvc.perform(multipart("/api/items/{id}", item.getId()).with(r -> { r.setMethod("PUT"); return r; }).with(as(other)).with(csrf())
                         .param("name", "Hijacked listing").param("categoryId", item.getCategory().getId().toString())
@@ -19085,7 +19085,7 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void invalidUploadsAreRejected() throws Exception {
-        User student = student("Ben Tan", AccountStatus.ACTIVE);
+        User student = student("Mou", AccountStatus.ACTIVE);
         var fake = new MockMultipartFile("photos", "photo.jpg", "image/jpeg", "<script>alert(1)</script>".getBytes());
         mvc.perform(multipart("/api/items").file(fake).with(as(student)).with(csrf())
                         .param("name", "Desk lamp").param("categoryId", categories.findBySlug("household").orElseThrow().getId().toString())
@@ -19096,7 +19096,7 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void pendingListingsAreHiddenFromOthers() throws Exception {
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
         Item item = approvedItem(owner, ListingType.SWAP, admin());
         jdbc.update("update items set approval_status = 'PENDING_APPROVAL' where item_id = ?", item.getId());
         mvc.perform(get("/api/items/{id}", item.getId())).andExpect(status().isNotFound());
@@ -19106,8 +19106,8 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
     @Test
     void unknownLoginAndWrongPasswordGiveTheSameAnswer() throws Exception {
-        student("Ben Tan", AccountStatus.ACTIVE);
-        for (String email : new String[]{"ben.tan@siswa.um.edu.my", "nobody@siswa.um.edu.my"}) {
+        student("Mou", AccountStatus.ACTIVE);
+        for (String email : new String[]{"mou@siswa.um.edu.my", "nobody@siswa.um.edu.my"}) {
             mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                     .content(body(Map.of("email", email, "password", "WrongPass1", "rememberMe", false))))
                     .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
@@ -21033,7 +21033,7 @@ Client-side validation messages. Registration form → pending page. Pending log
 
 ## v1.1 browser end-to-end (Chrome, real UI) ✅ 20 / 20
 
-Map picker on the item form (click to pin) → admin approval → pickup map lists the item and, after "locate", shows `≈ 3 min walk · 190 m` → item page shows distance and walk time → request → chat refused while pending → owner accepts → "Chat with Ben" from Received Requests → message sent with Enter → requester's header badge shows 1 → requester opens the thread → reply appears for the owner within 3 s without reloading → "Seen" receipt → owner confirms the handover in the chat → requester sees "Farah confirmed, confirm too" live → requester confirms → "Exchange completed!" → `/api/impact/summary` goes from 4 → 5 completed exchanges, 5 → 6 items reused and 5.5 → 6.9 kg → chat stays writable after completion.
+Map picker on the item form (click to pin) → admin approval → pickup map lists the item and, after "locate", shows `≈ 3 min walk · 190 m` → item page shows distance and walk time → request → chat refused while pending → owner accepts → "Chat with Mou" from Received Requests → message sent with Enter → requester's header badge shows 1 → requester opens the thread → reply appears for the owner within 3 s without reloading → "Seen" receipt → owner confirms the handover in the chat → requester sees "Adib confirmed, confirm too" live → requester confirms → "Exchange completed!" → `/api/impact/summary` goes from 4 → 5 completed exchanges, 5 → 6 items reused and 5.5 → 6.9 kg → chat stays writable after completion.
 
 Responsive check: every public, student and admin page at 375 px, 768 px and 1280 px has no horizontal overflow and no JavaScript errors.
 
@@ -21348,7 +21348,7 @@ FILE: documentation/wireframes/user-dashboard-wireframe.svg
 <title>Student Dashboard</title>
 <rect width="1200" height="860" fill="#F7F5ED"/>
 <text x="24" y="844" font-size="12" fill="#78827A">EcoSwap wireframe · Student Dashboard · low fidelity, not to scale</text>
-<rect x="40" y="20" width="1120" height="64" rx="30" fill="#FFFDF5" stroke="#C9CEBE"/><text x="70" y="59" font-size="20" fill="#153E35" font-weight="800" text-anchor="start">◎ Eco Swape</text><rect x="290" y="36" width="56" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="302" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Home</text><rect x="362" y="36" width="144" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="374" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Explore Items ▾</text><rect x="522" y="36" width="120" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="534" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">How It Works</text><rect x="658" y="36" width="96" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="670" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Community</text><rect x="770" y="36" width="72" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="782" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Impact</text><text x="840" y="57" font-size="14" fill="#202C26" font-weight="400" text-anchor="start">⌕   ♡   🔔</text><rect x="950" y="36" width="70" height="32" rx="16" fill="#438B25" stroke="#438B25"/><text x="985.0" y="56.333333333333336" font-size="13" text-anchor="middle" fill="#fff" font-weight="700">⇄ 2</text><rect x="1040" y="32" width="40" height="40" rx="20" fill="#FFFDF5" stroke="#C9CEBE"/><rect x="40" y="110" width="240" height="700" rx="22" fill="#FFFDF5" stroke="#C9CEBE"/><rect x="52" y="170" width="216" height="34" rx="10" fill="#E8F2C9" stroke="none"/><text x="68" y="192" font-size="13" fill="#153E35" font-weight="400" text-anchor="start">Dashboard</text><text x="68" y="232" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Explore Items</text><text x="68" y="272" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Post an Item</text><text x="68" y="312" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">My Listings</text><text x="68" y="352" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">My Requests</text><text x="68" y="392" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Received Requests</text><text x="68" y="432" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Saved Items</text><text x="68" y="472" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Exchange History</text><text x="68" y="512" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Notifications</text><text x="68" y="552" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Upcycling</text><text x="68" y="592" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Community</text><text x="68" y="632" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">My Profile</text><text x="68" y="672" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Help & Support</text><rect x="56" y="124" width="36" height="36" rx="18" fill="#E8F2C9" stroke="#C9CEBE"/><text x="102" y="147" font-size="13" fill="#153E35" font-weight="700" text-anchor="start">Student name</text><rect x="310" y="110" width="850" height="120" rx="28" fill="#153E35" stroke="#153E35"/><text x="340" y="160" font-size="26" fill="#fff" font-weight="800" text-anchor="start">Welcome back, Aisha</text><text x="340" y="190" font-size="13" fill="#B7C9BD" font-weight="400" text-anchor="start">Here is what is happening with your exchanges.</text><rect x="940" y="148" width="190" height="44" rx="22" fill="#B9D96B" stroke="#B9D96B"/><text x="1035.0" y="174.33333333333334" font-size="13" text-anchor="middle" fill="#5A645C" font-weight="700">+ Post an item</text><rect x="310" y="250" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="330" y="285" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="330" y="308" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Active listings</text><rect x="598" y="250" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="618" y="285" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="618" y="308" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Requests sent</text><rect x="886" y="250" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="906" y="285" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="906" y="308" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Requests received</text><rect x="310" y="346" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="330" y="381" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="330" y="404" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Accepted</text><rect x="598" y="346" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="618" y="381" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="618" y="404" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Completed</text><rect x="886" y="346" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="906" y="381" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="906" y="404" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Saved</text><rect x="310" y="450" width="520" height="360" rx="22" fill="#FFFDF5" stroke="#C9CEBE"/><text x="330" y="485" font-size="15" fill="#153E35" font-weight="700" text-anchor="start">Requests needing your answer</text><rect x="330" y="505" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="539" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="573" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="607" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="641" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="675" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="709" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="743" width="282.0" height="8" rx="4" fill="#D9DDCF"/><rect x="850" y="450" width="310" height="360" rx="22" fill="#FFFDF5" stroke="#C9CEBE"/><text x="870" y="485" font-size="15" fill="#153E35" font-weight="700" text-anchor="start">Recent notifications</text><rect x="870" y="505" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="539" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="573" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="607" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="641" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="675" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="709" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="743" width="162.0" height="8" rx="4" fill="#D9DDCF"/>
+<rect x="40" y="20" width="1120" height="64" rx="30" fill="#FFFDF5" stroke="#C9CEBE"/><text x="70" y="59" font-size="20" fill="#153E35" font-weight="800" text-anchor="start">◎ Eco Swape</text><rect x="290" y="36" width="56" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="302" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Home</text><rect x="362" y="36" width="144" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="374" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Explore Items ▾</text><rect x="522" y="36" width="120" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="534" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">How It Works</text><rect x="658" y="36" width="96" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="670" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Community</text><rect x="770" y="36" width="72" height="32" rx="16" fill="#E8F2C9" stroke="#E8F2C9"/><text x="782" y="57" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Impact</text><text x="840" y="57" font-size="14" fill="#202C26" font-weight="400" text-anchor="start">⌕   ♡   🔔</text><rect x="950" y="36" width="70" height="32" rx="16" fill="#438B25" stroke="#438B25"/><text x="985.0" y="56.333333333333336" font-size="13" text-anchor="middle" fill="#fff" font-weight="700">⇄ 2</text><rect x="1040" y="32" width="40" height="40" rx="20" fill="#FFFDF5" stroke="#C9CEBE"/><rect x="40" y="110" width="240" height="700" rx="22" fill="#FFFDF5" stroke="#C9CEBE"/><rect x="52" y="170" width="216" height="34" rx="10" fill="#E8F2C9" stroke="none"/><text x="68" y="192" font-size="13" fill="#153E35" font-weight="400" text-anchor="start">Dashboard</text><text x="68" y="232" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Explore Items</text><text x="68" y="272" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Post an Item</text><text x="68" y="312" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">My Listings</text><text x="68" y="352" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">My Requests</text><text x="68" y="392" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Received Requests</text><text x="68" y="432" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Saved Items</text><text x="68" y="472" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Exchange History</text><text x="68" y="512" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Notifications</text><text x="68" y="552" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Upcycling</text><text x="68" y="592" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Community</text><text x="68" y="632" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">My Profile</text><text x="68" y="672" font-size="13" fill="#202C26" font-weight="400" text-anchor="start">Help & Support</text><rect x="56" y="124" width="36" height="36" rx="18" fill="#E8F2C9" stroke="#C9CEBE"/><text x="102" y="147" font-size="13" fill="#153E35" font-weight="700" text-anchor="start">Student name</text><rect x="310" y="110" width="850" height="120" rx="28" fill="#153E35" stroke="#153E35"/><text x="340" y="160" font-size="26" fill="#fff" font-weight="800" text-anchor="start">Welcome back, Adib</text><text x="340" y="190" font-size="13" fill="#B7C9BD" font-weight="400" text-anchor="start">Here is what is happening with your exchanges.</text><rect x="940" y="148" width="190" height="44" rx="22" fill="#B9D96B" stroke="#B9D96B"/><text x="1035.0" y="174.33333333333334" font-size="13" text-anchor="middle" fill="#5A645C" font-weight="700">+ Post an item</text><rect x="310" y="250" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="330" y="285" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="330" y="308" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Active listings</text><rect x="598" y="250" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="618" y="285" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="618" y="308" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Requests sent</text><rect x="886" y="250" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="906" y="285" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="906" y="308" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Requests received</text><rect x="310" y="346" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="330" y="381" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="330" y="404" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Accepted</text><rect x="598" y="346" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="618" y="381" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="618" y="404" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Completed</text><rect x="886" y="346" width="272" height="80" rx="16" fill="#FFFDF5" stroke="#C9CEBE"/><text x="906" y="381" font-size="22" fill="#153E35" font-weight="800" text-anchor="start">0</text><text x="906" y="404" font-size="12" fill="#5A645C" font-weight="400" text-anchor="start">Saved</text><rect x="310" y="450" width="520" height="360" rx="22" fill="#FFFDF5" stroke="#C9CEBE"/><text x="330" y="485" font-size="15" fill="#153E35" font-weight="700" text-anchor="start">Requests needing your answer</text><rect x="330" y="505" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="539" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="573" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="607" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="641" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="675" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="709" width="470" height="8" rx="4" fill="#D9DDCF"/><rect x="330" y="743" width="282.0" height="8" rx="4" fill="#D9DDCF"/><rect x="850" y="450" width="310" height="360" rx="22" fill="#FFFDF5" stroke="#C9CEBE"/><text x="870" y="485" font-size="15" fill="#153E35" font-weight="700" text-anchor="start">Recent notifications</text><rect x="870" y="505" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="539" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="573" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="607" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="641" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="675" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="709" width="270" height="8" rx="4" fill="#D9DDCF"/><rect x="870" y="743" width="162.0" height="8" rx="4" fill="#D9DDCF"/>
 </svg>
 ```
 

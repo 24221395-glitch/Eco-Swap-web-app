@@ -34,8 +34,8 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void fullSwapLifecycleCompletesOnlyAfterBothConfirm() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
         Item wanted = approvedItem(owner, ListingType.SWAP, admin);
         Item offered = approvedItem(requester, ListingType.GIVEAWAY, admin);
 
@@ -56,11 +56,11 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void businessRulesAreEnforcedOnTheServer() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
         Item swap = approvedItem(owner, ListingType.SWAP, admin);
         Item giveaway = approvedItem(owner, ListingType.GIVEAWAY, admin);
-        Item othersItem = approvedItem(student("Chen Wei", AccountStatus.ACTIVE), ListingType.SWAP, admin);
+        Item othersItem = approvedItem(student("Student C", AccountStatus.ACTIVE), ListingType.SWAP, admin);
 
         assertCode(() -> exchanges.create(owner.getId(), swap.getId(), null, null), "OWN_ITEM");
         assertCode(() -> exchanges.create(requester.getId(), swap.getId(), null, null), "VALIDATION_FAILED");              // swap needs offer
@@ -80,8 +80,8 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void databaseRejectsDuplicateActiveRequestsEvenIfServiceIsBypassed() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
         Item item = approvedItem(owner, ListingType.GIVEAWAY, admin);
         requests.saveAndFlush(new com.ecoswap.exchange.entity.ExchangeRequest(item, requester, null, null));
         assertThatThrownBy(() -> requests.saveAndFlush(new com.ecoswap.exchange.entity.ExchangeRequest(item, requester, null, null)))
@@ -91,18 +91,18 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void acceptingClosesConflictingRequestsAndWithdrawReleasesItems() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User ben = student("Ben Tan", AccountStatus.ACTIVE);
-        User chen = student("Chen Wei", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User mou = student("Mou", AccountStatus.ACTIVE);
+        User chen = student("Student C", AccountStatus.ACTIVE);
         Item lamp = approvedItem(owner, ListingType.GIVEAWAY, admin);
-        var fromBen = exchanges.create(ben.getId(), lamp.getId(), null, null);
+        var fromMou = exchanges.create(mou.getId(), lamp.getId(), null, null);
         var fromChen = exchanges.create(chen.getId(), lamp.getId(), null, null);
 
-        exchanges.accept(owner.getId(), fromBen.id());
+        exchanges.accept(owner.getId(), fromMou.id());
         assertThat(requests.findById(fromChen.id()).orElseThrow().getStatus()).isEqualTo(ExchangeRequestStatus.CLOSED);
 
-        assertCode(() -> exchanges.cancel(ben.getId(), fromBen.id(), null), "VALIDATION_FAILED");   // withdraw needs reason
-        exchanges.cancel(ben.getId(), fromBen.id(), "Found one elsewhere");
+        assertCode(() -> exchanges.cancel(mou.getId(), fromMou.id(), null), "VALIDATION_FAILED");   // withdraw needs reason
+        exchanges.cancel(mou.getId(), fromMou.id(), "Found one elsewhere");
         assertThat(items.findById(lamp.getId()).orElseThrow().getAvailabilityStatus()).isEqualTo(ItemAvailabilityStatus.AVAILABLE);
     }
 
@@ -110,10 +110,10 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void concurrentAcceptancesCannotReserveTheSameItemTwice() throws Exception {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
         Item lamp = approvedItem(owner, ListingType.GIVEAWAY, admin);
         List<Long> requestIds = new ArrayList<>();
-        for (String name : List.of("Ben Tan", "Chen Wei", "Dina Lee", "Eva Ong")) {
+        for (String name : List.of("Mou", "Student C", "Student D", "Student E")) {
             requestIds.add(exchanges.create(student(name, AccountStatus.ACTIVE).getId(), lamp.getId(), null, null).id());
         }
         assertThat(race(requestIds.stream().<Callable<Object>>map(id -> () -> exchanges.accept(owner.getId(), id)).toList())).isEqualTo(1);
@@ -125,9 +125,9 @@ class ExchangeIntegrationTest extends IntegrationTestBase {
     @Test
     void anOfferedItemCannotBeReservedByTwoSwapsAtOnce() throws Exception {
         User admin = admin();
-        User trader = student("Ben Tan", AccountStatus.ACTIVE);
-        User ownerA = student("Aisha Karim", AccountStatus.ACTIVE);
-        User ownerC = student("Chen Wei", AccountStatus.ACTIVE);
+        User trader = student("Mou", AccountStatus.ACTIVE);
+        User ownerA = student("Adib", AccountStatus.ACTIVE);
+        User ownerC = student("Student C", AccountStatus.ACTIVE);
         Item offered = approvedItem(trader, ListingType.SWAP, admin);
         Item a = approvedItem(ownerA, ListingType.SWAP, admin);
         Item c = approvedItem(ownerC, ListingType.SWAP, admin);

@@ -40,9 +40,9 @@ class ChatMapAndImpactIntegrationTest extends IntegrationTestBase {
     @Test
     void chatOpensOnAcceptanceAndOnlyParticipantsCanUseIt() throws Exception {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
-        User stranger = student("Chen Wei", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
+        User stranger = student("Student C", AccountStatus.ACTIVE);
         Item item = approvedItem(owner, ListingType.GIVEAWAY, admin);
         ExchangeRequestView r = exchanges.create(requester.getId(), item.getId(), null, "May I have it?");
 
@@ -59,7 +59,7 @@ class ChatMapAndImpactIntegrationTest extends IntegrationTestBase {
         assertThat(chats.unreadCount(owner.getId())).isEqualTo(2);
         assertThat(notificationService.counts(owner.getId()).unreadMessages()).isEqualTo(2);
         assertThat(chats.conversations(owner.getId())).singleElement()
-                .satisfies(c -> { assertThat(c.unread()).isEqualTo(2); assertThat(c.canSend()).isTrue(); assertThat(c.other().fullName()).isEqualTo("Ben Tan"); });
+                .satisfies(c -> { assertThat(c.unread()).isEqualTo(2); assertThat(c.canSend()).isTrue(); assertThat(c.other().fullName()).isEqualTo("Mou"); });
 
         // opening the thread marks it read; polling with "after" only returns newer messages
         ChatViews.Thread thread = chats.thread(owner.getId(), r.id(), null);
@@ -96,8 +96,8 @@ class ChatMapAndImpactIntegrationTest extends IntegrationTestBase {
     @Test
     void completedExchangeUpdatesImpactFiguresImmediately() {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
-        User requester = student("Ben Tan", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
+        User requester = student("Mou", AccountStatus.ACTIVE);
         Item wanted = approvedItem(owner, ListingType.SWAP, admin);     // 1.50 kg
         Item offered = approvedItem(requester, ListingType.GIVEAWAY, admin);
         ImpactSummary before = impact.summary();
@@ -119,7 +119,7 @@ class ChatMapAndImpactIntegrationTest extends IntegrationTestBase {
     @Test
     void pickupPinIsStoredValidatedAndPublishedOnTheMap() throws Exception {
         User admin = admin();
-        User owner = student("Aisha Karim", AccountStatus.ACTIVE);
+        User owner = student("Adib", AccountStatus.ACTIVE);
         Item pinned = approvedItem(owner, ListingType.GIVEAWAY, admin);
         pinned.setPickupPin(new BigDecimal("3.1209"), new BigDecimal("101.6538"));
         items.save(pinned);

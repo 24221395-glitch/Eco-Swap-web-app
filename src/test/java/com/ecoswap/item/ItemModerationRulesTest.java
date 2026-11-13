@@ -29,7 +29,7 @@ class ItemModerationRulesTest {
         ReflectionTestUtils.setField(books, "id", 1L);
         ReflectionTestUtils.setField(furniture, "id", 2L);
         admin = User.newAdministrator("Admin", "admin@test", "hash");
-        item = new Item(User.newStudent("Aisha", "a@test", "hash", "UM"), books, "Textbook", "Good condition textbook",
+        item = new Item(User.newStudent("Adib", "a@test", "hash", "UM"), books, "Textbook", "Good condition textbook",
                 ItemCondition.GOOD, ListingType.SWAP, "Library", null);
     }
 

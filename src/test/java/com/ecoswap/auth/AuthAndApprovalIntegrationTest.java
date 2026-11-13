@@ -17,7 +17,7 @@ import org.springframework.http.MediaType;
 class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
 
     private Map<String, Object> registration(String email) {
-        return Map.of("fullName", "Aisha Karim", "email", email, "password", PASSWORD, "confirmPassword", PASSWORD,
+        return Map.of("fullName", "Adib", "email", email, "password", PASSWORD, "confirmPassword", PASSWORD,
                 "university", "Universiti Malaya", "acceptTerms", true);
     }
 
@@ -29,10 +29,10 @@ class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
     @Test
     void registrationCreatesPendingStudentAndNotifiesAdmins() throws Exception {
         User admin = admin();
-        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body(registration("Aisha@Siswa.um.edu.my"))))
+        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body(registration("Adib@Siswa.um.edu.my"))))
                 .andExpect(status().isCreated());
 
-        User saved = users.findByEmail("aisha@siswa.um.edu.my").orElseThrow();   // e-mail normalised
+        User saved = users.findByEmail("adib@siswa.um.edu.my").orElseThrow();   // e-mail normalised
         assertThat(saved.getRole()).isEqualTo(UserRole.USER);
         assertThat(saved.getAccountStatus()).isEqualTo(AccountStatus.PENDING_APPROVAL);
         assertThat(saved.getPasswordHash()).startsWith("$2").isNotEqualTo(PASSWORD);
@@ -42,8 +42,8 @@ class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
 
     @Test
     void duplicateEmailAndWeakPasswordAreRejected() throws Exception {
-        student("Aisha Karim", AccountStatus.ACTIVE);
-        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body(registration("aisha.karim@siswa.um.edu.my"))))
+        student("Adib", AccountStatus.ACTIVE);
+        mvc.perform(post("/api/auth/register").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body(registration("adib@siswa.um.edu.my"))))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("EMAIL_TAKEN"));
         var weak = new java.util.HashMap<>(registration("new@siswa.um.edu.my"));
         weak.put("password", "short");
@@ -67,7 +67,7 @@ class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
     @Test
     void approvalLifecycleControlsLogin() throws Exception {
         User admin = admin();
-        User student = student("Ben Tan", AccountStatus.PENDING_APPROVAL);
+        User student = student("Mou", AccountStatus.PENDING_APPROVAL);
 
         login(student.getEmail(), PASSWORD).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("ACCOUNT_PENDING"));
         login(student.getEmail(), "wrong-pass1").andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
@@ -92,7 +92,7 @@ class AuthAndApprovalIntegrationTest extends IntegrationTestBase {
     @Test
     void rejectedStudentSeesReasonAndCannotUseApp() throws Exception {
         User admin = admin();
-        User student = student("Chen Wei", AccountStatus.PENDING_APPROVAL);
+        User student = student("Student C", AccountStatus.PENDING_APPROVAL);
         mvc.perform(patch("/api/admin/users/{id}/reject", student.getId()).with(as(admin)).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(body(Map.of("reason", "Not a university e-mail")))).andExpect(status().isOk());
         login(student.getEmail(), PASSWORD).andExpect(status().isForbidden())
